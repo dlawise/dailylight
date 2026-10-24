@@ -648,7 +648,7 @@ async function cloudInit(manual){
       unsub=ref.onSnapshot(snap=>{
         const d=snap.data();
         if(d&&d.report){
-          liveRpt=d.report;
+          liveRpt=typeof d.report==="string"?JSON.parse(d.report):d.report;
           if(view==="progress"&&(!rpt||rptLive)){rpt=liveRpt;rptLive=true;render()}
           else if(view==="report"&&rptLive){rpt=liveRpt;render()}
         }
@@ -664,7 +664,7 @@ async function cloudInit(manual){
 function pushReport(now){
   if(!fb||!S.cloud||S.cloud.role!=="child")return;
   clearTimeout(pushT);
-  const go=()=>{try{const o={report:makeReport(),updated:Date.now()},f=["report","updated"];if(!freshLocal()){o.backup=JSON.stringify(cloudSafeState());f.push("backup")}fb.ref.set(o,{mergeFields:f}).catch(()=>{})}catch(e){}};
+  const go=()=>{try{const o={report:JSON.stringify(makeReport()),updated:Date.now()},f=["report","updated"];if(!freshLocal()){o.backup=JSON.stringify(cloudSafeState());f.push("backup")}fb.ref.set(o,{mergeFields:f}).then(()=>{if(cloudStatus){cloudStatus=""}}).catch(err=>{cloudStatus="Couldn't send progress: "+(err&&err.message?err.message:err);if(view==="settings")render()})}catch(e){}};
   if(now)go();else pushT=setTimeout(go,1500);
 }
 
